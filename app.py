@@ -382,30 +382,33 @@ with col1:
     from scipy.io import wavfile
     
     if webrtc_ctx and webrtc_ctx.state.playing:
-        if st.button("Stop & Transcribe", use_container_width=True):
-            if webrtc_ctx.audio_processor and webrtc_ctx.audio_processor.chunks:
-                audio_chunks = webrtc_ctx.audio_processor.chunks
-                audio_np = np.concatenate(audio_chunks, axis=0)
-    
-                # Convert float32 audio (-1.0 to 1.0) to int16
-                audio_int16 = (audio_np * 32767).astype(np.int16)
-    
-                # Save WAV file using scipy (no libsndfile needed)
-                wavfile.write("temp.wav", 48000, audio_int16)
-    
-                # Send to Gemini STT
-                with open("temp.wav", "rb") as f:
-                    stt_response = client.audio.transcribe(
-                        file=f,
-                        model="gemini-2.5-flash"
-                    )
-    
-                text = stt_response.text
-                process_message(text, "voice")
-                st.rerun()
-            else:
-                st.warning("No audio recorded yet!")
+    if st.button("Stop & Transcribe", use_container_width=True):
+        audio_chunks = webrtc_ctx.audio_processor.chunks
+        if audio_chunks:
+            audio_np = np.concatenate(audio_chunks, axis=0)
+            if audio_np.ndim == 1:
+                audio_np = audio_np[:, np.newaxis]
+            # Convert float audio [-1.0, +1.0] to int16 wav
+            audio_int16 = (audio_np * 32767).astype(np.int16)
 
+            wav_buffer = io.BytesIO()
+            wavfile.write(wav_buffer, 48000, audio_int16)
+            wav_buffer.seek(0)
+
+            # Upload audio file to Gemini
+            uploaded_file = client.files.upload(file=wav_buffer, 
+                                                filename="speech.wav")
+
+            # Ask Gemini to transcribe
+            prompt = "Please generate a transcript of the speech in the attached audio."
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[prompt, uploaded_file]
+            )
+
+            text = response.text
+            process_message(text, "voice")
+            st.experimental_rerun()
 
     
     st.subheader("🔗 Product Comparison")
