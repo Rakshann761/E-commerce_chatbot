@@ -9,7 +9,3 @@ fake-useragent
 streamlit-webrtc
 soundfile
 scipy
-whisper
-torchaudio
-torchvision
-torch
