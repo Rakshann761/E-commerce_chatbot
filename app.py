@@ -10,7 +10,7 @@ from product_list import loadplist
 import numpy as np
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 from streamlit_webrtc import AudioProcessorBase
-import av
+import av,io
 import soundfile as sf
 
 
