@@ -10,3 +10,4 @@ streamlit-webrtc
 soundfile
 scipy
 whisper
+openai
