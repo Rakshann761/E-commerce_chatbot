@@ -8,3 +8,4 @@ numpy
 fake-useragent
 streamlit-webrtc
 soundfile
+scipy
