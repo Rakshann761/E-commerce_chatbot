@@ -382,10 +382,17 @@ with col1:
         if st.button("Stop & Transcribe", use_container_width=True):
             audio_chunks = webrtc_ctx.audio_processor.chunks
             if audio_chunks:
-                # Concatenate all audio chunks
+                # Concatenate along time axis
                 audio_np = np.concatenate(audio_chunks, axis=0)
     
-                # Save as WAV file
+                # Ensure 2D array: (samples, channels)
+                if audio_np.ndim == 1:
+                    audio_np = audio_np[:, np.newaxis]  # Convert to (samples, 1)
+    
+                # Ensure float32 dtype
+                audio_np = audio_np.astype(np.float32)
+    
+                # Save WAV
                 sf.write("temp.wav", audio_np, 48000)
     
                 # Send to Gemini STT
@@ -395,13 +402,10 @@ with col1:
                         model="gemini-2.5-flash"
                     )
                 
-                # Extract text and process it
                 text = stt_response.text
                 process_message(text, "voice")
-    
-                # Rerun Streamlit to update UI
                 st.experimental_rerun()
-    
+        
 
     
     st.subheader("🔗 Product Comparison")
