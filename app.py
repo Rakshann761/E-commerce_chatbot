@@ -382,33 +382,33 @@ with col1:
     from scipy.io import wavfile
     
     if webrtc_ctx and webrtc_ctx.state.playing:
-    if st.button("Stop & Transcribe", use_container_width=True):
-        audio_chunks = webrtc_ctx.audio_processor.chunks
-        if audio_chunks:
-            audio_np = np.concatenate(audio_chunks, axis=0)
-            if audio_np.ndim == 1:
-                audio_np = audio_np[:, np.newaxis]
-            # Convert float audio [-1.0, +1.0] to int16 wav
-            audio_int16 = (audio_np * 32767).astype(np.int16)
-
-            wav_buffer = io.BytesIO()
-            wavfile.write(wav_buffer, 48000, audio_int16)
-            wav_buffer.seek(0)
-
-            # Upload audio file to Gemini
-            uploaded_file = client.files.upload(file=wav_buffer, 
-                                                filename="speech.wav")
-
-            # Ask Gemini to transcribe
-            prompt = "Please generate a transcript of the speech in the attached audio."
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[prompt, uploaded_file]
-            )
-
-            text = response.text
-            process_message(text, "voice")
-            st.experimental_rerun()
+        if st.button("Stop & Transcribe", use_container_width=True):
+            audio_chunks = webrtc_ctx.audio_processor.chunks
+            if audio_chunks:
+                audio_np = np.concatenate(audio_chunks, axis=0)
+                if audio_np.ndim == 1:
+                    audio_np = audio_np[:, np.newaxis]
+                # Convert float audio [-1.0, +1.0] to int16 wav
+                audio_int16 = (audio_np * 32767).astype(np.int16)
+    
+                wav_buffer = io.BytesIO()
+                wavfile.write(wav_buffer, 48000, audio_int16)
+                wav_buffer.seek(0)
+    
+                # Upload audio file to Gemini
+                uploaded_file = client.files.upload(file=wav_buffer, 
+                                                    filename="speech.wav")
+    
+                # Ask Gemini to transcribe
+                prompt = "Please generate a transcript of the speech in the attached audio."
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=[prompt, uploaded_file]
+                )
+    
+                text = response.text
+                process_message(text, "voice")
+                st.experimental_rerun()
 
     
     st.subheader("🔗 Product Comparison")
