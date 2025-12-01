@@ -378,22 +378,20 @@ with col1:
 
     
     
+    import numpy as np
+    from scipy.io import wavfile
+    
     if webrtc_ctx and webrtc_ctx.state.playing:
         if st.button("Stop & Transcribe", use_container_width=True):
-            audio_chunks = webrtc_ctx.audio_processor.chunks
-            if audio_chunks:
-                # Concatenate along time axis
+            if webrtc_ctx.audio_processor and webrtc_ctx.audio_processor.chunks:
+                audio_chunks = webrtc_ctx.audio_processor.chunks
                 audio_np = np.concatenate(audio_chunks, axis=0)
     
-                # Ensure 2D array: (samples, channels)
-                if audio_np.ndim == 1:
-                    audio_np = audio_np[:, np.newaxis]  # Convert to (samples, 1)
+                # Convert float32 audio (-1.0 to 1.0) to int16
+                audio_int16 = (audio_np * 32767).astype(np.int16)
     
-                # Ensure float32 dtype
-                audio_np = audio_np.astype(np.float32)
-    
-                # Save WAV
-                sf.write("temp.wav", audio_np, 48000)
+                # Save WAV file using scipy (no libsndfile needed)
+                wavfile.write("temp.wav", 48000, audio_int16)
     
                 # Send to Gemini STT
                 with open("temp.wav", "rb") as f:
@@ -401,11 +399,13 @@ with col1:
                         file=f,
                         model="gemini-2.5-flash"
                     )
-                
+    
                 text = stt_response.text
                 process_message(text, "voice")
-                st.experimental_rerun()
-        
+                st.rerun()
+            else:
+                st.warning("No audio recorded yet!")
+
 
     
     st.subheader("🔗 Product Comparison")
