@@ -381,9 +381,13 @@ with col1:
 
     
     
+    import whisper
     import tempfile
     from scipy.io import wavfile
     import numpy as np
+    
+    # Load Whisper model once (choose your preferred size)
+    whisper_model = whisper.load_model("base")  # options: tiny, base, small, medium, large
     
     if webrtc_ctx and webrtc_ctx.state.playing:
         if st.button("Stop & Transcribe", use_container_width=True):
@@ -393,7 +397,7 @@ with col1:
                 audio_np = np.concatenate(audio_chunks, axis=0)
                 if audio_np.ndim == 1:
                     audio_np = audio_np[:, np.newaxis]
-                
+    
                 # Convert to int16 for WAV
                 audio_int16 = (audio_np * 32767).astype(np.int16)
     
@@ -402,26 +406,16 @@ with col1:
                     wavfile.write(tmp_wav.name, 48000, audio_int16)
                     tmp_wav.flush()
     
-                    # Upload audio file to Gemini
-                    file_object = client.files.upload(file=tmp_wav.name)
+                    # Transcribe using Whisper
+                    result = whisper_model.transcribe(tmp_wav.name)
+                    transcribed_text = result["text"]
     
-                    # Ask Gemini to transcribe only
-                    stt_response = client.models.generate_content(
-                        model="gemini-2.5-flash",
-                        contents=[
-                            "Transcribe this audio to text only:",
-                            file_object
-                        ]
-                    )
-    
-                # Get transcribed text
-                transcribed_text = stt_response.text
                 st.success(f"📝 Transcribed Text: {transcribed_text}")
     
-                # You can now process it as a normal text input
+                # Process the transcribed text as usual
                 process_message(transcribed_text, "voice")
                 st.experimental_rerun()
-    
+        
 
 
     
