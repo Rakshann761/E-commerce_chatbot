@@ -381,34 +381,47 @@ with col1:
 
     
     
+    import tempfile
+    from scipy.io import wavfile
+    import numpy as np
+    
     if webrtc_ctx and webrtc_ctx.state.playing:
-        if st.button("Stop & Send to AI", use_container_width=True):
+        if st.button("Stop & Transcribe", use_container_width=True):
             audio_chunks = webrtc_ctx.audio_processor.chunks
             if audio_chunks:
+                # Combine audio chunks into one array
                 audio_np = np.concatenate(audio_chunks, axis=0)
                 if audio_np.ndim == 1:
                     audio_np = audio_np[:, np.newaxis]
+                
+                # Convert to int16 for WAV
                 audio_int16 = (audio_np * 32767).astype(np.int16)
     
-                # Save to temp WAV file
+                # Save to temporary WAV file
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav:
                     wavfile.write(tmp_wav.name, 48000, audio_int16)
                     tmp_wav.flush()
     
-                    # 🔹 Send to Gemini for transcription
-                    with open(tmp_wav.name, "rb") as f:
-                        stt_response = client.audio.transcribe(
-                            file=f,
-                            model="gemini-2.5-flash"
-                        )
+                    # Upload audio file to Gemini
+                    file_object = client.files.upload(file=tmp_wav.name)
+    
+                    # Ask Gemini to transcribe only
+                    stt_response = client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=[
+                            "Transcribe this audio to text only:",
+                            file_object
+                        ]
+                    )
     
                 # Get transcribed text
-                user_text = stt_response.text
-                st.success(f"Transcribed Text: {user_text}")
+                transcribed_text = stt_response.text
+                st.success(f"📝 Transcribed Text: {transcribed_text}")
     
-                # 🔹 Process as normal chat input
-                process_message(user_text, "voice")
+                # You can now process it as a normal text input
+                process_message(transcribed_text, "voice")
                 st.experimental_rerun()
+    
 
 
     
