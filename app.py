@@ -368,7 +368,7 @@ with col1:
     
     webrtc_ctx = webrtc_streamer(
     key="speech",
-    mode=WebRtcMode.SENDONLY.name,
+    mode=WebRtcMode.SENDONLY,  # pass the enum directly, do NOT use .name
     media_stream_constraints={"audio": True, "video": False},
 )
 
