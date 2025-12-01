@@ -7,10 +7,9 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from product_list import loadplist
-import numpy
+import numpy as np
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 from streamlit_webrtc import AudioProcessorBase
-
 import av
 
 
