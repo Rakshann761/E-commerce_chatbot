@@ -209,7 +209,7 @@ def text_to_speech(text, language='en'):
         tts = gTTS(text=clean_text, lang=tts_lang, slow=False)
         
         audio_buffer = BytesIO()
-        tts.write_to_fp(audio_buffer)
+        tts.write_to_fp(audio_buffer)s
         audio_buffer.seek(0)
         
         return audio_buffer
