@@ -367,11 +367,11 @@ with col1:
     st.subheader("Voice Input (Browser Microphone)")
     
     webrtc_ctx = webrtc_streamer(
-        key="speech",
-        mode="recv",
-        audio_processor_factory=STTAudioProcessor,
-        media_stream_constraints={"audio": True, "video": False},
-    )
+    key="speech",
+    mode=WebRtcMode.SENDONLY.name,
+    media_stream_constraints={"audio": True, "video": False},
+)
+
     
     if webrtc_ctx and webrtc_ctx.state.playing:
         if st.button("Stop & Transcribe", use_container_width=True):
