@@ -190,7 +190,6 @@ def detect_language(text):
         return 'en'
 
 def text_to_speech(text, language='en'):
-    return None
     try:
         clean_text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
         clean_text = re.sub(r'\*(.*?)\*', r'\1', clean_text)
