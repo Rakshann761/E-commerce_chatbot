@@ -378,12 +378,8 @@ with col1:
 
     
     
-    import tempfile
-    import numpy as np
-    from scipy.io import wavfile
-    
     if webrtc_ctx and webrtc_ctx.state.playing:
-        if st.button("Stop & Transcribe", use_container_width=True):
+        if st.button("Stop & Send to AI", use_container_width=True):
             audio_chunks = webrtc_ctx.audio_processor.chunks
             if audio_chunks:
                 audio_np = np.concatenate(audio_chunks, axis=0)
@@ -396,7 +392,7 @@ with col1:
                     wavfile.write(tmp_wav.name, 48000, audio_int16)
                     tmp_wav.flush()
     
-                    # Transcribe using Gemini
+                    # 🔹 Send to Gemini for transcription
                     with open(tmp_wav.name, "rb") as f:
                         stt_response = client.audio.transcribe(
                             file=f,
@@ -404,10 +400,11 @@ with col1:
                         )
     
                 # Get transcribed text
-                text = stt_response.text
+                user_text = stt_response.text
+                st.success(f"Transcribed Text: {user_text}")
     
-                # Process as normal chat input
-                process_message(text, "voice")
+                # 🔹 Process as normal chat input
+                process_message(user_text, "voice")
                 st.experimental_rerun()
 
 
