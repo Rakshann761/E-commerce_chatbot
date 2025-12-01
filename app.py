@@ -272,7 +272,7 @@ def get_gemini_response(user_input, user_language, is_url_analysis=False, url_co
             5. Never mention that you're switching languages - just respond naturally in the user's language.
             6. If the user speaks multiple languages in one message, respond in the dominant language you detect.
             7. Always suggest specific products from our list.
-            8. Response should be in list format with product details.
+            8. Response should be in LIST formate.
             9. Response should be in same font and style.
             """
 
@@ -388,7 +388,7 @@ with col1:
     
     st.subheader("🔗 Product Comparison")
     
-    url_input = st.text_input("Enter competitor product URL:", 
+    url_input = st.text_input("Enter product URL:", 
                               placeholder="https://example.com/product-page", 
                               key="url_input")
     
