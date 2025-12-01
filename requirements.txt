@@ -7,3 +7,4 @@ requests
 pandas
 numpy
 fake-useragent
+pyaudio
