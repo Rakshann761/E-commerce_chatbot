@@ -1,10 +1,9 @@
 streamlit
 google-genai
-SpeechRecognition
 gTTS
 beautifulsoup4
 requests
 pandas
 numpy
 fake-useragent
-pyaudio
+
