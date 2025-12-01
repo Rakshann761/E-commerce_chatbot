@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from product_list import loadplist
 
-API_KEY = "AIzaSyCMq82qXqClPt0T7NuSHXfMzsX3FbpOuqs"  
+API_KEY = MY_API_KEY
 client = genai.Client(api_key=API_KEY)
 
 product_list = loadplist()
