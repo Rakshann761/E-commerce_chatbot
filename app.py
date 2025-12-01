@@ -387,7 +387,7 @@ with col1:
     
     st.subheader("🔗 Product Comparison")
     
-    url_input = st.text_input("Enter competitor product URL:", 
+    url_input = st.text_input("Enter product URL:", 
                               placeholder="https://example.com/product-page", 
                               key="url_input")
     
