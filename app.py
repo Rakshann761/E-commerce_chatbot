@@ -378,9 +378,10 @@ with col1:
 
     
     
+    import tempfile
     import numpy as np
     from scipy.io import wavfile
-    import tempfile
+    
     if webrtc_ctx and webrtc_ctx.state.playing:
         if st.button("Stop & Transcribe", use_container_width=True):
             audio_chunks = webrtc_ctx.audio_processor.chunks
@@ -390,25 +391,25 @@ with col1:
                     audio_np = audio_np[:, np.newaxis]
                 audio_int16 = (audio_np * 32767).astype(np.int16)
     
-                # Write to a temporary WAV file
+                # Save to temp WAV file
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav:
-                    from scipy.io import wavfile
                     wavfile.write(tmp_wav.name, 48000, audio_int16)
-                    tmp_wav.flush()  # make sure data is written
+                    tmp_wav.flush()
     
-                    # Upload to Gemini
-                    uploaded_file = client.files.upload(file=tmp_wav.name)
+                    # Transcribe using Gemini
+                    with open(tmp_wav.name, "rb") as f:
+                        stt_response = client.audio.transcribe(
+                            file=f,
+                            model="gemini-2.5-flash"
+                        )
     
-                # Ask Gemini to transcribe
-                prompt = "Please generate a transcript of the speech in the attached audio."
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=[prompt, uploaded_file]
-                )
+                # Get transcribed text
+                text = stt_response.text
     
-                text = response.text
+                # Process as normal chat input
                 process_message(text, "voice")
                 st.experimental_rerun()
+
 
     
     st.subheader("🔗 Product Comparison")
