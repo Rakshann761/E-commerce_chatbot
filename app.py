@@ -1,6 +1,5 @@
 import streamlit as st
 import google.genai as genai
-import speech_recognition as sr
 from gtts import gTTS
 from io import BytesIO
 import re
@@ -8,6 +7,8 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from product_list import loadplist
+from streamlit_webrtc import webrtc_streamer, AudioProcessorBase
+import av
 
 
 client = genai.Client(api_key=st.secrets["MY_API_KEY"])
@@ -219,27 +220,14 @@ def text_to_speech(text, language='en'):
         st.error(f"Text-to-speech error: {e}")
         return None
 
-def record_audio():
-    try:
-        recognizer = sr.Recognizer()
-        with sr.Microphone() as source:
-            st.session_state.recognition_result = "🎤 Listening... Speak now!"
-            recognizer.adjust_for_ambient_noise(source)
-            audio = recognizer.listen(source, timeout=10, phrase_time_limit=10)
-            
-        st.session_state.recognition_result = "🔄 Processing your speech..."
-        text = recognizer.recognize_google(audio)
-        return text
-        
-    except sr.WaitTimeoutError:
-        st.session_state.recognition_result = "⏰ Listening timeout"
-        return None
-    except sr.UnknownValueError:
-        st.session_state.recognition_result = "❌ Could not understand audio"
-        return None
-    except Exception as e:
-        st.session_state.recognition_result = f"❌ Error: {str(e)}"
-        return None
+class STTAudioProcessor(AudioProcessorBase):
+    def __init__(self):
+        self.chunks = []
+
+    def recv_audio(self, frame: av.AudioFrame):
+        pcm = frame.to_ndarray()
+        self.chunks.append(pcm)
+        return frame
 
 def get_gemini_response(user_input, user_language, is_url_analysis=False, url_content=None, url_metadata=None):
     try:
@@ -373,18 +361,36 @@ col1, col2 = st.columns([1, 2])
 with col1:
     st.header("🎤 Input Methods")
     
-    st.subheader("Voice Input")
-    if st.button("🎤 Record Voice", key="record", use_container_width=True):
-        st.session_state.is_recording = True
-        with st.spinner("🎤 Listening... Speak now!"):
-            text = record_audio()
-            if text:
-                process_message(text, "voice")
-            st.session_state.is_recording = False
-            st.rerun()
+    st.subheader("Voice Input (Browser Microphone)")
     
-    if st.session_state.get('recognition_result'):
-        st.info(st.session_state.recognition_result)
+    webrtc_ctx = webrtc_streamer(
+        key="speech",
+        mode="recv",
+        audio_processor_factory=STTAudioProcessor,
+        media_stream_constraints={"audio": True, "video": False},
+    )
+    
+    if webrtc_ctx and webrtc_ctx.state.playing:
+        if st.button("Stop & Transcribe", use_container_width=True):
+            audio = webrtc_ctx.audio_processor.chunks
+            if audio:
+                audio_np = np.concatenate(audio, axis=0)
+    
+                # Save WAV file
+                import soundfile as sf
+                sf.write("temp.wav", audio_np, 48000)
+    
+                # Send to Gemini STT
+                with open("temp.wav", "rb") as f:
+                    stt_response = client.audio.transcribe(
+                        file=f,
+                        model="gemini-2.5-flash"
+                    )
+    
+                text = stt_response.text
+                process_message(text, "voice")
+                st.rerun()
+
     
     st.subheader("🔗 Product Comparison")
     
