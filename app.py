@@ -11,6 +11,7 @@ import numpy as np
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 from streamlit_webrtc import AudioProcessorBase
 import av
+import soundfile as sf
 
 
 client = genai.Client(api_key=st.secrets["MY_API_KEY"])
@@ -377,30 +378,30 @@ with col1:
 
     
     
-if webrtc_ctx and webrtc_ctx.state.playing:
-    if st.button("Stop & Transcribe", use_container_width=True):
-        audio_chunks = webrtc_ctx.audio_processor.chunks
-        if audio_chunks:
-            # Concatenate all audio chunks
-            audio_np = np.concatenate(audio_chunks, axis=0)
-
-            # Save as WAV file
-            sf.write("temp.wav", audio_np, 48000)
-
-            # Send to Gemini STT
-            with open("temp.wav", "rb") as f:
-                stt_response = client.audio.transcribe(
-                    file=f,
-                    model="gemini-2.5-flash"
-                )
-            
-            # Extract text and process it
-            text = stt_response.text
-            process_message(text, "voice")
-
-            # Rerun Streamlit to update UI
-            st.experimental_rerun()
-
+    if webrtc_ctx and webrtc_ctx.state.playing:
+        if st.button("Stop & Transcribe", use_container_width=True):
+            audio_chunks = webrtc_ctx.audio_processor.chunks
+            if audio_chunks:
+                # Concatenate all audio chunks
+                audio_np = np.concatenate(audio_chunks, axis=0)
+    
+                # Save as WAV file
+                sf.write("temp.wav", audio_np, 48000)
+    
+                # Send to Gemini STT
+                with open("temp.wav", "rb") as f:
+                    stt_response = client.audio.transcribe(
+                        file=f,
+                        model="gemini-2.5-flash"
+                    )
+                
+                # Extract text and process it
+                text = stt_response.text
+                process_message(text, "voice")
+    
+                # Rerun Streamlit to update UI
+                st.experimental_rerun()
+    
 
     
     st.subheader("🔗 Product Comparison")
