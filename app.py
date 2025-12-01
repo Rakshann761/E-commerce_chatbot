@@ -12,6 +12,9 @@ from streamlit_webrtc import webrtc_streamer, WebRtcMode
 from streamlit_webrtc import AudioProcessorBase
 import av,io
 import soundfile as sf
+import tempfile
+import numpy as np
+from scipy.io import wavfile
 
 
 client = genai.Client(api_key=st.secrets["MY_API_KEY"])
