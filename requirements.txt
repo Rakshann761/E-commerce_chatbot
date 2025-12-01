@@ -6,4 +6,4 @@ requests
 pandas
 numpy
 fake-useragent
-
+streamlit-webrtc==0.45.1
