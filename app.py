@@ -379,9 +379,10 @@ with col1:
     
     if webrtc_ctx and webrtc_ctx.state.playing:
         if st.button("Stop & Transcribe", use_container_width=True):
-            audio = webrtc_ctx.audio_processor.chunks
-            if audio:
-                audio_np = np.concatenate(audio, axis=0)
+            # Check if audio chunks exist
+            if webrtc_ctx.audio_processor and webrtc_ctx.audio_processor.chunks:
+                audio_chunks = webrtc_ctx.audio_processor.chunks
+                audio_np = np.concatenate(audio_chunks, axis=0)
     
                 # Save WAV file
                 import soundfile as sf
@@ -397,6 +398,9 @@ with col1:
                 text = stt_response.text
                 process_message(text, "voice")
                 st.rerun()
+            else:
+                st.warning("No audio captured yet. Please speak and try again.")
+
 
     
     st.subheader("🔗 Product Comparison")
