@@ -223,14 +223,17 @@ def text_to_speech(text, language='en'):
         st.error(f"Text-to-speech error: {e}")
         return None
 
-class STTAudioProcessor(AudioProcessorBase):
+
+class MyAudioProcessor(AudioProcessorBase):
     def __init__(self):
         self.chunks = []
 
-    def recv_audio(self, frame: av.AudioFrame):
-        pcm = frame.to_ndarray()
-        self.chunks.append(pcm)
+    def recv(self, frame):
+        # Convert frame to numpy array
+        audio = frame.to_ndarray()
+        self.chunks.append(audio)
         return frame
+
 
 def get_gemini_response(user_input, user_language, is_url_analysis=False, url_content=None, url_metadata=None):
     try:
@@ -368,7 +371,8 @@ with col1:
     
     webrtc_ctx = webrtc_streamer(
     key="speech",
-    mode=WebRtcMode.SENDONLY,  # pass the enum directly, do NOT use .name
+    mode=WebRtcMode.SENDONLY,  # just pass the enum
+    audio_processor_factory=MyAudioProcessor,  # <--- use factory here
     media_stream_constraints={"audio": True, "video": False},
 )
 
