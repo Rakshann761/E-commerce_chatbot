@@ -380,7 +380,7 @@ with col1:
     
     import numpy as np
     from scipy.io import wavfile
-    
+    import tempfile
     if webrtc_ctx and webrtc_ctx.state.playing:
         if st.button("Stop & Transcribe", use_container_width=True):
             audio_chunks = webrtc_ctx.audio_processor.chunks
@@ -388,16 +388,16 @@ with col1:
                 audio_np = np.concatenate(audio_chunks, axis=0)
                 if audio_np.ndim == 1:
                     audio_np = audio_np[:, np.newaxis]
-                # Convert float audio [-1.0, +1.0] to int16 wav
                 audio_int16 = (audio_np * 32767).astype(np.int16)
     
-                wav_buffer = io.BytesIO()
-                wavfile.write(wav_buffer, 48000, audio_int16)
-                wav_buffer.seek(0)
+                # Write to a temporary WAV file
+                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav:
+                    from scipy.io import wavfile
+                    wavfile.write(tmp_wav.name, 48000, audio_int16)
+                    tmp_wav.flush()  # make sure data is written
     
-                # Upload audio file to Gemini
-                uploaded_file = client.files.upload(file=wav_buffer, 
-                                                    filename="speech.wav")
+                    # Upload to Gemini
+                    uploaded_file = client.files.upload(file=tmp_wav.name)
     
                 # Ask Gemini to transcribe
                 prompt = "Please generate a transcript of the speech in the attached audio."
